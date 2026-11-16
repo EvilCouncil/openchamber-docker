@@ -1,0 +1,53 @@
+name: Notify on Workflow Failure
+
+on:
+  workflow_run:
+    workflows:
+      - "Build and Push Docker Image"
+      - "Check for openchamber updates"
+    types:
+      - completed
+
+permissions:
+  issues: write
+
+jobs:
+  notify:
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure ci-failure label exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create ci-failure --repo ${{ github.repository }} \
+            --color d73a4a \
+            --description "Automated: a GitHub Actions workflow run failed" \
+            --force
+
+      - name: Check for existing open issue
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WF_NAME: ${{ github.event.workflow_run.name }}
+        run: |
+          TITLE="CI failure: $WF_NAME"
+          COUNT=$(gh issue list --repo ${{ github.repository }} \
+            --label ci-failure --state open \
+            --search "\"$TITLE\" in:title" --json number --jq 'length')
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
+      - name: Open issue
+        if: steps.existing.outputs.count == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WF_NAME: ${{ github.event.workflow_run.name }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          gh issue create --repo ${{ github.repository }} \
+            --title "CI failure: $WF_NAME" \
+            --label ci-failure \
+            --body "The **$WF_NAME** workflow failed on \`$HEAD_BRANCH\`.
+
+          Run: $RUN_URL"

@@ -1,0 +1,14 @@
+.DS_Store
+*.swp
+*.swo
+node_modules/
+.env
+.env.local
+.env.*.local
+.vscode/
+.idea/
+*.code-workspace
+.docker/
+__pycache__/
+.pytest_cache/
+workspace/

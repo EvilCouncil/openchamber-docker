@@ -24,8 +24,8 @@ FROM oven/bun:1.4-debian AS bun-stage
 # Stage 3: install @openchamber/web + opencode v2 binary into /npm-global
 FROM base AS npm-builder
 
-ARG OPENCHAMBER_VERSION=2.7.2
-ARG OPENCODE_VERSION=2.3.0
+ARG OPENCHAMBER_VERSION=2.8.0
+ARG OPENCODE_VERSION=2.4.1
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential && \
